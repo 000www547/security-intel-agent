@@ -1,0 +1,117 @@
+# =====================================================
+# Security Intel Agent - 每日自动情报采集流水线
+# =====================================================
+# 面试知识点:
+#   - GitHub Actions: CI/CD 自动化平台
+#   - Cron 表达式: 定时触发
+#   - workflow_dispatch: 手动触发
+#   - Secrets: 敏感信息(API Keys)安全存储
+#   - Matrix Strategy: 多环境并行
+# =====================================================
+
+name: 每日安全情报采集
+
+on:
+  # 定时触发: 北京时间每日 16:00 (UTC+8 → UTC 8:00)
+  schedule:
+    - cron: "0 8 * * *"
+
+  # 手动触发: GitHub 页面点按钮即可执行
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  collect-and-analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ---- 1. 检出代码 ----
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # ---- 2. 安装 Python ----
+      - name: 设置 Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: "backend/requirements.txt"
+
+      # ---- 3. 安装依赖 ----
+      - name: 安装 Python 依赖
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      # ---- 4. 生成配置文件 ----
+      #  从 GitHub Secrets 注入敏感信息
+      - name: 生成运行时配置
+        run: |
+          cd backend
+          cat > config.runtime.yaml << EOF
+          llm:
+            api_key: "${{ secrets.LLM_API_KEY }}"
+            base_url: "https://api.siliconflow.cn/v1"
+            model_name: "deepseek-ai/DeepSeek-V3"
+            temperature: 0.3
+            max_tokens: 2048
+
+          collect:
+            rss_sources:
+              - name: "Seebug Paper"
+                url: "https://paper.seebug.org/feed/"
+              - name: "FreeBuf"
+                url: "https://www.freebuf.com/feed"
+              - name: "安全客"
+                url: "https://www.anquanke.com/feed"
+              - name: "先知社区"
+                url: "https://xz.aliyun.com/feed"
+            request_timeout: 15
+            max_items_per_source: 10
+
+          database:
+            path: "data/security_intel.db"
+
+          notify:
+            feishu_webhook: "${{ secrets.FEISHU_WEBHOOK }}"
+
+          report:
+            output_dir: "reports"
+            format: "markdown"
+          EOF
+
+      # ---- 5. 执行流水线 ----
+      - name: 执行情报采集分析流水线
+        env:
+          CONFIG_PATH: config.runtime.yaml
+        run: |
+          cd backend
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from app.pipeline import SecurityPipeline
+          pipeline = SecurityPipeline('config.runtime.yaml')
+          result = pipeline.run()
+          print('流水线结果:', result)
+          "
+
+      # ---- 6. 归档数据库（可选: 上传为 Artifact） ----
+      - name: 上传数据库归档
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-intel-db-${{ github.run_id }}
+          path: backend/data/security_intel.db
+          retention-days: 7
+
+      # ---- 7. 归档报告 ----
+      - name: 上传每日报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-report-${{ github.run_id }}
+          path: backend/reports/
+          retention-days: 30

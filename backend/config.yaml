@@ -1,0 +1,45 @@
+# ====================================
+# Security-Intel-Agent 全局配置
+# ====================================
+
+# --- 大模型配置 ---
+# 硅基流动 API: https://cloud.siliconflow.cn (注册即送免费额度)
+# 模型列表: https://docs.siliconflow.cn/docs/model-names
+llm:
+  api_key: "your-siliconflow-api-key"   # 硅基流动 API Key (sk- 开头)
+  base_url: "https://api.siliconflow.cn/v1"
+  model_name: "deepseek-ai/DeepSeek-V3" # DeepSeek V3（免费额度可用）
+  # 其他可选模型:
+  #   "Pro/deepseek-ai/DeepSeek-V3"     付费增强版(更快)
+  #   "deepseek-ai/DeepSeek-R1"        推理增强版
+  #   "Qwen/Qwen2.5-7B-Instruct"       通义千问
+  temperature: 0.3
+  max_tokens: 2048
+
+# --- 情报采集源 ---
+collect:
+  rss_sources:
+    - name: "Seebug Paper"
+      url: "https://paper.seebug.org/feed/"
+    - name: "FreeBuf"
+      url: "https://www.freebuf.com/feed"
+    - name: "安全客"
+      url: "https://www.anquanke.com/feed"
+    - name: "先知社区"
+      url: "https://xz.aliyun.com/feed"
+  request_timeout: 15           # 请求超时（秒）
+  max_items_per_source: 10      # 每个源最多取多少条
+
+# --- 数据库 ---
+database:
+  path: "backend/data/security_intel.db"
+
+# --- 消息推送 ---
+notify:
+  feishu_webhook: ""            # 飞书机器人 Webhook（留空则不推送）
+  dingtalk_webhook: ""          # 钉钉机器人 Webhook
+
+# --- 报告输出 ---
+report:
+  output_dir: "backend/reports"
+  format: "markdown"            # markdown / json

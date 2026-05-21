@@ -1,0 +1,42 @@
+# =====================================
+# Docker Compose 一键部署
+# =====================================
+# 面试: "docker-compose 的作用？"
+# → 编排多容器应用(backend + frontend)
+# → 统一管理网络、卷、环境变量
+# =====================================
+
+version: "3.8"
+
+services:
+  # ---- 后端 API 服务 ----
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: security-intel-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - CONFIG_PATH=config.yaml
+    volumes:
+      - ./backend/config.yaml:/app/config.yaml:ro
+      - intel_data:/app/data
+      - ./backend/reports:/app/reports
+    restart: unless-stopped
+
+  # ---- 前端 Web 服务 ----
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: security-intel-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  intel_data:
+    driver: local
