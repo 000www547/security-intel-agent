@@ -11,6 +11,7 @@ SQLite 数据持久化模块
   - 为什么不用 ORM？轻型项目 sqlite3 足够，避免过度工程
 ================================================================================
 """
+import json
 import sqlite3
 import logging
 import os
@@ -308,5 +309,3 @@ class Database:
         return d
 
 
-# 标准库 json 导入
-import json

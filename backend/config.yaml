@@ -6,9 +6,9 @@
 # 硅基流动 API: https://cloud.siliconflow.cn (注册即送免费额度)
 # 模型列表: https://docs.siliconflow.cn/docs/model-names
 llm:
-  api_key: "your-siliconflow-api-key"   # 硅基流动 API Key (sk- 开头)
+  api_key: "sk-pukeyhpxbnxwsvakkuyghfectuvecncsecxvlclfwrgfhott"   # 硅基流动 API Key (sk- 开头)
   base_url: "https://api.siliconflow.cn/v1"
-  model_name: "deepseek-ai/DeepSeek-V3" # DeepSeek V3（免费额度可用）
+  model_name: "Pro/MiniMaxAI/MiniMax-M2.5" 
   # 其他可选模型:
   #   "Pro/deepseek-ai/DeepSeek-V3"     付费增强版(更快)
   #   "deepseek-ai/DeepSeek-R1"        推理增强版
